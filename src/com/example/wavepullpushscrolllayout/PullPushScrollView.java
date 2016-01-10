@@ -21,6 +21,8 @@ public class PullPushScrollView extends ScrollView {
 	private float mLastX = 0;
 	private float deltaY = -1;
 
+	private boolean isDown;
+
 	private ObjectAnimator oa;
 
 	private OnSlideListenre mOnSlideListenre;
@@ -61,6 +63,7 @@ public class PullPushScrollView extends ScrollView {
 	public boolean onInterceptTouchEvent(MotionEvent ev) {
 		switch (ev.getAction()) {
 		case MotionEvent.ACTION_DOWN:
+			deltaY = 0;
 			mLastX = ev.getY();
 			break;
 		}
@@ -73,12 +76,13 @@ public class PullPushScrollView extends ScrollView {
 		switch (ev.getAction()) {
 		case MotionEvent.ACTION_MOVE:
 			if (getScrollY() != 0) {
-				deltaY = 0;
 				mLastX = ev.getY();
 			} else {
+
 				deltaY = ev.getY() - mLastX;
 				if (deltaY > 5) {
 					// 下滑
+					isDown = true;
 					setDown((int) -deltaY / 5);
 					if (mWaveLayout != null) {
 						mWaveLayout.startWave();
@@ -88,10 +92,11 @@ public class PullPushScrollView extends ScrollView {
 			}
 			break;
 		case MotionEvent.ACTION_UP:
-			if (getScrollY() < mOriginalHeaderHeight) {
+			if (isDown) {
 				if (deltaY != 0) {
 					reset();
 				}
+				isDown = false;
 			}
 			new Handler().postDelayed(new Runnable() {
 
@@ -127,11 +132,9 @@ public class PullPushScrollView extends ScrollView {
 
 	public void setDown(int t) {
 		scrollTo(0, t);
-		if (t < 0) {
-			mChildHeader.getLayoutParams().height = mOriginalHeaderHeight - t;
-			mChild.getLayoutParams().height = mOriginalHeaderHeight - t;
-			mChild.requestLayout();
-		}
+		mChildHeader.getLayoutParams().height = mOriginalHeaderHeight - t;
+		mChild.getLayoutParams().height = mOriginalHeaderHeight - t;
+		mChild.requestLayout();
 	}
 
 	private void reset() {
@@ -145,6 +148,7 @@ public class PullPushScrollView extends ScrollView {
 		if (mOnSlideListenre != null) {
 			mOnSlideListenre.onRefresh();
 		}
+
 	}
 
 	public void setOnSlideListenre(OnSlideListenre l) {
