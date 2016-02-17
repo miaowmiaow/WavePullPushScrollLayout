@@ -60,44 +60,27 @@ public class PullPushScrollView extends ScrollView {
 	}
 
 	@Override
-	public boolean onInterceptTouchEvent(MotionEvent ev) {
+	public boolean dispatchTouchEvent(MotionEvent ev) {
 		switch (ev.getAction()) {
 		case MotionEvent.ACTION_DOWN:
-			deltaY = 0;
 			mLastX = ev.getY();
 			break;
-		}
-		return super.onInterceptTouchEvent(ev);
-	}
-
-	@Override
-	public boolean onTouchEvent(MotionEvent ev) {
-
-		switch (ev.getAction()) {
 		case MotionEvent.ACTION_MOVE:
 			if (getScrollY() != 0) {
+				deltaY = 0;
 				mLastX = ev.getY();
 			} else {
-
 				deltaY = ev.getY() - mLastX;
-				if (deltaY > 5) {
+				if (deltaY > 20) {
 					// 下滑
-					isDown = true;
 					setDown((int) -deltaY / 5);
 					if (mWaveLayout != null) {
 						mWaveLayout.startWave();
 					}
-					return true;
 				}
 			}
 			break;
 		case MotionEvent.ACTION_UP:
-			if (isDown) {
-				if (deltaY != 0) {
-					reset();
-				}
-				isDown = false;
-			}
 			new Handler().postDelayed(new Runnable() {
 
 				@Override
@@ -107,9 +90,15 @@ public class PullPushScrollView extends ScrollView {
 					}
 				}
 			}, 150);
+			if (getScrollY() < mOriginalHeaderHeight) {
+				if (deltaY >= 100) {
+					reset();
+					return false;
+				}
+			}
 			break;
 		}
-		return super.onTouchEvent(ev);
+		return super.dispatchTouchEvent(ev);
 	}
 
 	@Override
